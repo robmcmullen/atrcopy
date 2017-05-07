@@ -159,6 +159,9 @@ class TestDos33Image(BaseFilesystemModifyTest):
 
 
 if __name__ == "__main__":
+    import __builtin__
+    __builtin__._dbg = False
+
     t = TestAtariDosSDImage()
     for name in dir(t):
         print name

@@ -858,14 +858,14 @@ class DefaultSegment(object):
         for where_index, comment in zip(indexes, comments):
             rawindex = self.get_raw_index(where_index)
             if comment:
-                log.debug("  restoring comment: rawindex=%d, '%s'" % (rawindex, comment))
+                if _dbg: log.debug("  restoring comment: rawindex=%d, '%s'" % (rawindex, comment))
                 self.rawdata.extra.comments[rawindex] = comment
             else:
                 try:
                     del self.rawdata.extra.comments[rawindex]
-                    log.debug("  no comment in original data, removed comment in current data at rawindex=%d" % rawindex)
+                    if _dbg: log.debug("  no comment in original data, removed comment in current data at rawindex=%d" % rawindex)
                 except KeyError:
-                    log.debug("  no comment in original data or current data at rawindex=%d" % rawindex)
+                    if _dbg: log.debug("  no comment in original data or current data at rawindex=%d" % rawindex)
                     pass
 
     def get_comments_at_indexes(self, indexes):
@@ -888,17 +888,17 @@ class DefaultSegment(object):
         """
         restore_data = []
         for start, end in ranges:
-            log.debug("range: %d-%d" % (start, end))
+            if _dbg: log.debug("range: %d-%d" % (start, end))
             styles = self.style[start:end].copy()
             items = {}
             for i in range(start, end):
                 rawindex = self.get_raw_index(i)
                 try:
                     comment = self.rawdata.extra.comments[rawindex]
-                    log.debug("  index: %d rawindex=%d '%s'" % (i, rawindex, comment))
+                    if _dbg: log.debug("  index: %d rawindex=%d '%s'" % (i, rawindex, comment))
                     items[i] = (rawindex, comment)
                 except KeyError:
-                    log.debug("  index: %d rawindex=%d NO COMMENT TO SAVE" % (i, rawindex))
+                    if _dbg: log.debug("  index: %d rawindex=%d NO COMMENT TO SAVE" % (i, rawindex))
                     items[i] = (rawindex, None)
 
             restore_data.append((start, end, styles, items))
@@ -908,20 +908,20 @@ class DefaultSegment(object):
         """Restore comment styles and data
         """
         for start, end, styles, items in restore_data:
-            log.debug("range: %d-%d" % (start, end))
+            if _dbg: log.debug("range: %d-%d" % (start, end))
             self.style[start:end] = styles
             for i in range(start, end):
                 rawindex, comment = items[i]
                 if comment:
-                    log.debug("  restoring comment: rawindex=%d, '%s'" % (rawindex, comment))
+                    if _dbg: log.debug("  restoring comment: rawindex=%d, '%s'" % (rawindex, comment))
                     self.rawdata.extra.comments[rawindex] = comment
                 else:
                     # no comment in original data, remove any if exists
                     try:
                         del self.rawdata.extra.comments[rawindex]
-                        log.debug("  no comment in original data, removed comment in current data at rawindex=%d" % rawindex)
+                        if _dbg: log.debug("  no comment in original data, removed comment in current data at rawindex=%d" % rawindex)
                     except KeyError:
-                        log.debug("  no comment in original data or current data at rawindex=%d" % rawindex)
+                        if _dbg: log.debug("  no comment in original data or current data at rawindex=%d" % rawindex)
                         pass
 
     def get_comments_in_range(self, start, end):

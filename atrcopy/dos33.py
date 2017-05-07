@@ -24,7 +24,7 @@ class Dos33TSSector(WriteableSector):
             t, s = self.header.track_from_sector(sector.sector_num)
             self.data[index] = t
             self.data[index + 1] = s
-            log.debug("tslist entry #%d: %d, %d" % (index, t, s))
+            if _dbg: log.debug("tslist entry #%d: %d, %d" % (index, t, s))
             index += 2
 
     def get_tslist(self):
@@ -93,10 +93,10 @@ class Dos33VTOC(VTOC):
         # so we need to reorder them using numpy's indexing before stuffing
         # them into the sector map
         self.sector_map[0:self.max_sectors] = bits[self.vtoc_bit_reorder_index]
-        log.debug("vtoc before:\n%s" % str(self))
+        if _dbg: log.debug("vtoc before:\n%s" % str(self))
 
     def calc_bitmap(self):
-        log.debug("vtoc after:\n%s" % str(self))
+        if _dbg: log.debug("vtoc after:\n%s" % str(self))
 
         # reverse the process from above, so swap the order of every 16 bits,
         # turn them into bytes, then stuff them back into the vtoc. The bit
@@ -129,7 +129,7 @@ class Dos33Directory(Directory):
 
     def encode_dirent(self, dirent):
         data = dirent.encode_dirent()
-        log.debug("encoded dirent: %s" % data)
+        if _dbg: log.debug("encoded dirent: %s" % data)
         return data
 
     def set_sector_numbers(self, image):
@@ -140,7 +140,7 @@ class Dos33Directory(Directory):
             t, s = image.header.track_from_sector(next_sector)
             sector.data[1] = t
             sector.data[2] = s
-            log.debug("directory sector %d -> next = %d" % (sector.sector_num, next_sector))
+            if _dbg: log.debug("directory sector %d -> next = %d" % (sector.sector_num, next_sector))
             current_sector = next_sector
 
 
@@ -266,7 +266,7 @@ class Dos33Dirent(Dirent):
         tslist = BaseSectorList(header)
         for start in range(0, len(sector_list), header.ts_pairs):
             end = min(start + header.ts_pairs, len(sector_list))
-            log.debug("ts: %d-%d" % (start, end))
+            if _dbg: log.debug("ts: %d-%d" % (start, end))
             s = Dos33TSSector(header, sector_list, start, end)
             s.ts_start, s.ts_end = start, end
             tslist.append(s)
@@ -274,7 +274,7 @@ class Dos33Dirent(Dirent):
         vtoc.assign_sector_numbers(self, tslist)
         sector_list.extend(tslist)
         self.track, self.sector = header.track_from_sector(tslist[0].sector_num)
-        log.debug("track/sector lists:\n%s" % str(tslist))
+        if _dbg: log.debug("track/sector lists:\n%s" % str(tslist))
 
     def sanity_check(self, image):
         if self.deleted:
@@ -294,7 +294,7 @@ class Dos33Dirent(Dirent):
         sector_map = []
         while sector_num > 0:
             image.assert_valid_sector(sector_num)
-            log.debug("reading track/sector list at %d for %s" % (sector_num, self))
+            if _dbg: log.debug("reading track/sector list at %d for %s" % (sector_num, self))
             data, _ = image.get_sectors(sector_num)
             sector = Dos33TSSector(image.header, data=data)
             sector.sector_num = sector_num
@@ -318,7 +318,7 @@ class Dos33Dirent(Dirent):
         if not self.is_sane:
             raise InvalidDirent("Invalid directory entry '%s'" % str(self))
         self.get_track_sector_list(image)
-        log.debug("start_read: %s, t/s list: %s" % (str(self), str(self.sector_map)))
+        if _dbg: log.debug("start_read: %s, t/s list: %s" % (str(self), str(self.sector_map)))
         self.current_sector_index = 0
         self.current_read = self.num_sectors
 
@@ -327,7 +327,7 @@ class Dos33Dirent(Dirent):
             sector = self.sector_map[self.current_sector_index]
         except IndexError:
             sector = -1  # force ByteNotInFile166 error at next read
-        log.debug("read_sector: index %d=%d in %s" % (self.current_sector_index,sector, str(self)))
+        if _dbg: log.debug("read_sector: index %d=%d in %s" % (self.current_sector_index,sector, str(self)))
         last = (self.current_sector_index == len(self.sector_map) - 1)
         raw, pos, size = image.get_raw_bytes(sector)
         bytes, num_data_bytes = self.process_raw_sector(image, raw)
@@ -415,7 +415,7 @@ class Dos33DiskImage(DiskImageBase):
             else:
                 raise InvalidDiskImage("Invalid VTOC location for DOS 3.3")
 
-        log.debug("DOS 3.3 byte swap: %s" % swap_order)
+        if _dbg: log.debug("DOS 3.3 byte swap: %s" % swap_order)
 
     vtoc_type = np.dtype([
         ('unused1', 'S1'),
@@ -453,7 +453,7 @@ class Dos33DiskImage(DiskImageBase):
         files = []
         while sector > 0:
             self.assert_valid_sector(sector)
-            log.debug("reading catalog sector: %d" % sector)
+            if _dbg: log.debug("reading catalog sector: %d" % sector)
             values, style = self.get_sectors(sector)
             sector = self.header.sector_from_track(values[1], values[2])
             i = 0xb
@@ -468,7 +468,7 @@ class Dos33DiskImage(DiskImageBase):
                     files.append(dirent)
                 if directory is not None:
                     directory.set(num, dirent)
-                log.debug("valid directory entry %s" % dirent)
+                if _dbg: log.debug("valid directory entry %s" % dirent)
                 i += 0x23
                 num += 1
         self.files = files
@@ -525,7 +525,7 @@ class Dos33DiskImage(DiskImageBase):
         sector = self.header.first_directory
         while sector > 0:
             self.assert_valid_sector(sector)
-            log.debug("loading directory segment from catalog sector %d" % sector)
+            if _dbg: log.debug("loading directory segment from catalog sector %d" % sector)
             raw, pos, size = self.get_raw_bytes(sector)
             byte_order.extend(range(pos, pos + size))
             sector = self.header.sector_from_track(raw[1], raw[2])
@@ -557,7 +557,7 @@ class Dos33DiskImage(DiskImageBase):
         self.assert_valid_sector(sector_num)
         raw, _, _ = self.get_raw_bytes(sector_num)
         next_sector = self.header.sector_from_track(raw[1], raw[2])
-        log.debug("checking catalog sector %d, next catalog sector: %d" % (sector_num, next_sector))
+        if _dbg: log.debug("checking catalog sector %d, next catalog sector: %d" % (sector_num, next_sector))
         if next_sector == 0:
             raise NoSpaceInDirectory("No space left in catalog")
         return sector_num, next_sector
@@ -596,7 +596,7 @@ class Dos33DiskImage(DiskImageBase):
         for s in segments:
             origin = min(origin, s.start_addr)
             last = max(last, s.start_addr + len(s))
-            log.debug("contiguous bytes needed: %04x - %04x" % (origin, last))
+            if _dbg: log.debug("contiguous bytes needed: %04x - %04x" % (origin, last))
         if run_addr and run_addr != origin:
             # check if run_addr points to some location that has data
             found = False
@@ -652,7 +652,7 @@ class Dos33BinFile(object):
         pos = 0
         style_pos = 0
         first = True
-        log.debug("Initial parsing: size=%d" % self.size)
+        if _dbg: log.debug("Initial parsing: size=%d" % self.size)
         if len(b[pos:pos + 4]) == 4:
             start, count = b[pos:pos + 4].view(dtype='<u2')
             s[pos:pos + 4] = get_style_bits(data=True)

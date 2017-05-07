@@ -22,7 +22,7 @@ class AtariDosWriteableSector(WriteableSector):
         self.data[index + 0] = (self.file_num << 2) | (hi & 0x03)
         self.data[index + 1] = lo
         self.data[index + 2] = self.used
-        log.debug("sector metadata for %d: %s" % (self._sector_num, self.data[index:index + 3]))
+        if _dbg: log.debug("sector metadata for %d: %s" % (self._sector_num, self.data[index:index + 3]))
         # file number will be added later when known.
 
 
@@ -31,10 +31,10 @@ class AtariDosVTOC(VTOC):
         self.vtoc1 = segments[0].data
         bits = np.unpackbits(self.vtoc1[0x0a:0x64])
         self.sector_map[0:720] = bits
-        log.debug("vtoc before:\n%s" % str(self))
+        if _dbg: log.debug("vtoc before:\n%s" % str(self))
 
     def calc_bitmap(self):
-        log.debug("vtoc after:\n%s" % str(self))
+        if _dbg: log.debug("vtoc after:\n%s" % str(self))
         packed = np.packbits(self.sector_map[0:720])
         self.vtoc1[0x0a:0x64] = packed
         s = WriteableSector(self.sector_size, self.vtoc1)
@@ -52,7 +52,7 @@ class AtariDosDirectory(Directory):
 
     def encode_dirent(self, dirent):
         data = dirent.encode_dirent()
-        log.debug("encoded dirent: %s" % data)
+        if _dbg: log.debug("encoded dirent: %s" % data)
         return data
 
     def set_sector_numbers(self, image):
@@ -225,7 +225,7 @@ class AtariDosDirent(Dirent):
         self.file_num = index
         self.dos_2 = True
         self.in_use = True
-        log.debug("set_values: %s" % self)
+        if _dbg: log.debug("set_values: %s" % self)
 
 
 class MydosDirent(AtariDosDirent):
@@ -279,7 +279,7 @@ class AtariDosFile(object):
         pos = 0
         style_pos = 0
         first = True
-        log.debug("Initial parsing: size=%d" % self.size)
+        if _dbg: log.debug("Initial parsing: size=%d" % self.size)
         while pos < self.size:
             if pos + 1 < self.size:
                 header, = b[pos:pos+2].view(dtype='<u2')
@@ -294,7 +294,7 @@ class AtariDosFile(object):
                 continue
             elif first:
                 raise InvalidBinaryFile("Object file doesn't start with 0xffff")
-            log.debug("header parsing: header=0x%x" % header)
+            if _dbg: log.debug("header parsing: header=0x%x" % header)
             if len(b[pos:pos + 4]) < 4:
                 self.segments.append(ObjSegment(r[pos:pos + 4], 0, 0, 0, len(b[pos:pos + 4]), "Short Segment Header"))
                 break
@@ -534,7 +534,7 @@ class AtariDosDiskImage(DiskImageBase):
                 files.append(dirent)
                 if not dirent.is_sane:
                     self.all_sane = False
-                    log.debug("dirent %d not sane: %s" % (num, dirent))
+                    if _dbg: log.debug("dirent %d not sane: %s" % (num, dirent))
             elif dirent.flag == 0:
                 break
             if directory is not None:
@@ -646,7 +646,7 @@ class AtariDosDiskImage(DiskImageBase):
                 binary = AtariDosFile(segment.rawdata)
                 segments_out.extend(binary.segments)
             except InvalidBinaryFile:
-                log.debug("%s not a binary file; skipping segment generation" % str(segment))
+                if _dbg: log.debug("%s not a binary file; skipping segment generation" % str(segment))
         return segments_out
 
     def create_executable_file_image(self, segments, run_addr=None):

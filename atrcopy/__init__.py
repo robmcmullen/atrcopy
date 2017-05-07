@@ -188,17 +188,17 @@ def assemble(image, source_files, data_files, obj_files, run_addr=""):
             asm = pyatasm.Assemble(name)
         except SyntaxError, e:
             raise AtrError("Assembly error: %s" % e.msg)
-        log.debug("Assembled %s into:" % name)
+        if _dbg: log.debug("Assembled %s into:" % name)
         for first, last, object_code in asm.segments:
             s = segments.add_segment(object_code, first)
-            log.debug("  %s" % s.name)
+            if _dbg: log.debug("  %s" % s.name)
             print "adding %s from %s assembly" % (s, name)
     for name in data_files:
         if "@" not in name:
             raise AtrError("Data files must include a load address specified with the @ char")
         name, addr = name.rsplit("@", 1)
         first = text_to_int(addr)
-        log.debug("Adding data file %s at $%04x" % (name, first))
+        if _dbg: log.debug("Adding data file %s at $%04x" % (name, first))
         subset = slice(0, sys.maxint)
         if "[" in name and "]" in name:
             name, slicetext = name.rsplit("[", 1)
@@ -218,7 +218,7 @@ def assemble(image, source_files, data_files, obj_files, run_addr=""):
         with open(name, 'rb') as fh:
             data = fh.read()[subset]
             s = segments.add_segment(data, first)
-            log.debug("read data for %s" % s.name)
+            if _dbg: log.debug("read data for %s" % s.name)
     for name in obj_files:
         parser = find_diskimage(name)
         if parser and parser.image:

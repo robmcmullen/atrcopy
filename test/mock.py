@@ -26,5 +26,8 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
+import __builtin__
+__builtin__._dbg = False
+
 import numpy as np
 from numpy.testing import assert_almost_equal

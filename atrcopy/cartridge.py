@@ -227,7 +227,7 @@ class AtariCartImage(DiskImageBase):
             return
         k, rem = divmod((len(self) - len(self.header)), 1024)
         c = get_cart(self.cart_type)
-        log.debug("checking type=%d, k=%d, rem=%d for %s, %s" % (self.cart_type, k, rem, c[1], c[2]))
+        if _dbg: log.debug("checking type=%d, k=%d, rem=%d for %s, %s" % (self.cart_type, k, rem, c[1], c[2]))
         if rem > 0:
             raise InvalidDiskImage("Cart not multiple of 1K")
         if k != c[2]:

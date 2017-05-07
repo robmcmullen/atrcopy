@@ -348,7 +348,7 @@ class DiskImageBase(object):
     def write_sector_list(self, sector_list):
         for sector in sector_list:
             pos, size = self.header.get_pos(sector.sector_num)
-            log.debug("writing: %s at %d" % (sector, pos))
+            if _dbg: log.debug("writing: %s at %d" % (sector, pos))
             self.bytes[pos:pos + size] = sector.data
 
     def delete_file(self, filename):
@@ -373,7 +373,7 @@ class DiskImageBase(object):
         try:
             vtoc = self.get_vtoc_object()
             for sector_num, pos, size in vtoc.iter_free_sectors():
-                log.debug("shredding: sector %s at %d, fill value=%d" % (sector_num, pos, fill_value))
+                if _dbg: log.debug("shredding: sector %s at %d, fill value=%d" % (sector_num, pos, fill_value))
                 self.bytes[pos:pos + size] = fill_value
         except AtrError:
             self.rollback_transaction(state)

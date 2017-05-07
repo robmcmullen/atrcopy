@@ -89,7 +89,7 @@ class SpartaDosDirent(AtariDosDirent):
 
     def start_read(self, image):
         if not self.is_sane:
-            log.debug("Invalid directory entry '%s', starting_sector=%s" % (str(self), self.starting_sector))
+            if _dbg: log.debug("Invalid directory entry '%s', starting_sector=%s" % (str(self), self.starting_sector))
             raise InvalidDirent("Invalid directory entry '%s'" % str(self))
         self.sector_map = image.get_sector_map(self.starting_sector)
         self.sector_map_index = 0
