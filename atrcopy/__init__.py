@@ -109,12 +109,19 @@ def extract_files(image, files):
         output = dirent.filename
         if options.lower:
             output = output.lower()
+        if options.dir:
+            if not os.path.exists(options.dir):
+                os.makedirs(options.dir)
+            output = os.path.join(options.dir, output)
         if not options.dry_run:
             data = image.get_file(dirent)
             if os.path.exists(output) and not options.force:
                 print("skipping %s, file exists. Use -f to overwrite" % output)
                 continue
             print("extracting %s -> %s" % (name, output))
+            if options.text:
+                data = data.replace(b'\x7f', b'\t')
+                data = data.replace(b'\x9b', b'\n')
             with open(output, "wb") as fh:
                 fh.write(data)
         else:
@@ -480,6 +487,8 @@ def run():
     extract_parser.add_argument("-l", "--lower", action="store_true", default=False, help="convert extracted filenames to lower case")
     #extract_parser.add_argument("-n", "--no-sys", action="store_true", default=False, help="only extract things that look like games (no DOS or .SYS files)")
     extract_parser.add_argument("-e", "--ext", action="store", nargs=1, default=False, help="add the specified extension")
+    extract_parser.add_argument("-d", "--dir", action="store", default=False, help="extract to the specified directory")
+    extract_parser.add_argument("-t", "--text", action="store_true", default=False, help="convert text files to unix-style text files")
     extract_parser.add_argument("-f", "--force", action="store_true", default=False, help="allow file overwrites on local filesystem")
     extract_parser.add_argument("files", metavar="FILENAME", nargs="*", help="if not using the -a/--all option, a file (or list of files) to extract from the disk image.")
 
