@@ -153,6 +153,7 @@ def add_files(image, files):
     for name in files:
         with open(name, "rb") as fh:
             data = fh.read()
+        name = os.path.basename(name)
         changed = save_file(image, name, filetype, data)
     if changed:
         image.save()
