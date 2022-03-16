@@ -447,6 +447,9 @@ class Dos33DiskImage(DiskImageBase):
         values = data[0:self.vtoc_type.itemsize].view(dtype=self.vtoc_type)[0]
         self.header.first_directory = self.header.sector_from_track(values['cat_track'], values['cat_sector'])
         self.header.sector_size = int(values['sector_size'])
+        if self.header.sector_size != 256:
+            log.warning(f"Nonstandard sector size {self.header.sector_size}; this is likely an error, setting to 256")
+            self.header.sector_size = 256
         self.header.max_sectors = int(values['num_tracks']) * int(values['sectors_per_track'])
         self.header.ts_pairs = int(values['max_pairs'])
         self.header.dos_release = values['dos_release']
